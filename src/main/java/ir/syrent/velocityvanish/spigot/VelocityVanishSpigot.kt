@@ -7,12 +7,10 @@ import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.WrappedGameProfile
 import com.google.gson.JsonObject
-import com.jeff_media.updatechecker.UpdateCheckSource
-import com.jeff_media.updatechecker.UpdateChecker
 import io.papermc.lib.PaperLib
-import ir.syrent.velocityvanish.spigot.command.VanishCommand
 import ir.syrent.velocityvanish.spigot.bridge.BukkitBridge
 import ir.syrent.velocityvanish.spigot.bridge.BukkitBridgeManager
+import ir.syrent.velocityvanish.spigot.command.VanishCommand
 import ir.syrent.velocityvanish.spigot.core.VanishManager
 import ir.syrent.velocityvanish.spigot.hook.DependencyManager
 import ir.syrent.velocityvanish.spigot.listener.*
@@ -21,12 +19,9 @@ import ir.syrent.velocityvanish.spigot.ruom.Ruom
 import ir.syrent.velocityvanish.spigot.ruom.adventure.AdventureApi
 import ir.syrent.velocityvanish.spigot.ruom.messaging.BukkitMessagingEvent
 import ir.syrent.velocityvanish.spigot.storage.Settings
-import ir.syrent.velocityvanish.spigot.storage.Settings.bstats
 import ir.syrent.velocityvanish.spigot.storage.Settings.velocitySupport
-import ir.syrent.velocityvanish.spigot.utils.ServerVersion
 import ir.syrent.velocityvanish.spigot.utils.Utils
 import ir.syrent.velocityvanish.utils.component
-import org.bstats.bukkit.Metrics
 import org.bukkit.entity.Player
 
 
@@ -48,16 +43,11 @@ class VelocityVanishSpigot : RUoMPlugin() {
         resetData(true)
         sendFiglet()
         sendWarningMessages()
-        checkUpdate()
         initializeCommands()
         initializeListeners()
 
         if (velocitySupport) {
             initializePluginChannels()
-        }
-
-        if (bstats) {
-            enableMetrics()
         }
 
         if (DependencyManager.protocolLibHook.exists) {
@@ -92,33 +82,8 @@ class VelocityVanishSpigot : RUoMPlugin() {
     }
 
     private fun sendWarningMessages() {
-        if (!ServerVersion.supports(16)) {
-            Ruom.warn("Your running your server on a legacy minecraft version (< 16).")
-            Ruom.warn("This plugin is not tested on legacy versions, so it may not work properly.")
-            Ruom.warn("Please consider updating your server to 1.16.5 or higher.")
-        }
-
         PaperLib.suggestPaper(this)
         DependencyManager
-    }
-
-    private fun checkUpdate() {
-        Thread {
-            try {
-                val updateChecker = UpdateChecker(this, UpdateCheckSource.HANGAR, "Syrent/VelocityVanish/Release")
-                updateChecker.checkNow().onSuccess { _, _ ->
-                    updateChecker.setDownloadLink("https://hangar.papermc.io/Syrent/VelocityVanish")
-                    updateChecker.checkEveryXHours(24.0)
-                    updateChecker.setChangelogLink("https://hangar.papermc.io/Syrent/VelocityVanish/versions/${updateChecker.latestVersion}")
-                    updateChecker.setNotifyOpsOnJoin(true)
-                    updateChecker.setNotifyByPermissionOnJoin("velocityvanish.updatechecker")
-                    updateChecker.setTimeout(30 * 1000)
-                    updateChecker.setSupportLink("https://discord.gg/xZyYGU4EG4")
-                }
-            } catch (_: Exception) {
-                Ruom.warn("Could not check for updates, check your connection.")
-            }
-        }.start()
     }
 
     private fun resetData(startup: Boolean) {
@@ -132,11 +97,6 @@ class VelocityVanishSpigot : RUoMPlugin() {
         } catch (_: Exception) {
             Ruom.warn("Plugin didn't fully complete reset data task on plugin shutdown")
         }
-    }
-
-    private fun enableMetrics() {
-        val pluginID = 16679
-        Metrics(this, pluginID)
     }
 
     private fun initializeInstances() {
@@ -163,21 +123,6 @@ class VelocityVanishSpigot : RUoMPlugin() {
         BlockBreakListener(this)
         BlockPlaceListener(this)
         PlayerGameModeChangeListener(this)
-        if (DependencyManager.sayanChatHook.exists) {
-//            PlayerMentionListener(this)
-//            if (!velocitySupport) PrivateMessageListener(this)
-        }
-        if (ServerVersion.supports(12)) {
-            TabCompleteListener(this)
-        }
-        if (ServerVersion.supports(16)) {
-            PlayerAdvancementDoneListener(this)
-        }
-        if (ServerVersion.supports(19)) BlockReceiveGameListener(this)
-        if (DependencyManager.essentialsXHook.exists) {
-            AfkStatusChangeListener(this)
-            PrivateMessagePreSendListener(this)
-        }
     }
 
     private fun initializePluginChannels() {

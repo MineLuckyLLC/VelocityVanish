@@ -11,25 +11,24 @@ import me.clip.placeholderapi.PlaceholderAPI
 import org.bukkit.Sound
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.entity.Player
-import org.bukkit.inventory.meta.SkullMeta
 import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
 
 object Settings {
 
-    const val latestSettingsConfigVersion = 7
+    private const val LATEST_CONFIG_VERSION = 7
 
     lateinit var settings: YamlConfig
-    lateinit var language: YamlConfig
+    private lateinit var language: YamlConfig
     private lateinit var settingsConfig: FileConfiguration
     private lateinit var languageConfig: FileConfiguration
 
     private val messages = mutableMapOf<Message, String>()
 
-    var settingsConfigVersion = 1
+    private var settingsConfigVersion = 1
 
-    lateinit var defaultLanguage: String
+    private lateinit var defaultLanguage: String
     var velocitySupport = true
 
     var showDependencySuggestions = true
@@ -66,7 +65,7 @@ object Settings {
 
         settingsConfigVersion = settingsConfig.getInt("config_version", 1)
 
-        if (settingsConfigVersion < latestSettingsConfigVersion) {
+        if (settingsConfigVersion < LATEST_CONFIG_VERSION) {
             val backupFileName = "settings.yml-bak-${LocalDate.now()}"
             val settingsFile = File(Ruom.plugin.dataFolder, "settings.yml")
             val backupFile = File(Ruom.plugin.dataFolder, backupFileName)
@@ -115,7 +114,7 @@ object Settings {
 
         messages.apply {
             this.clear()
-            for (message in Message.values()) {
+            for (message in Message.entries) {
                 if (message == Message.EMPTY) {
                     this[message] = ""
                     continue
@@ -183,7 +182,7 @@ object Settings {
 
     private fun sendBackupMessage(fileName: String) {
         AdventureApi.get().console().sendMessage("<red>=============================================================".component())
-        AdventureApi.get().console().sendMessage("<red>Config version updated to $latestSettingsConfigVersion. Please set your preferred values again.".component())
+        AdventureApi.get().console().sendMessage("<red>Config version updated to $LATEST_CONFIG_VERSION. Please set your preferred values again.".component())
         AdventureApi.get().console().sendMessage("<gray>Previous values are still accessible via $fileName in plugin folder.".component())
         AdventureApi.get().console().sendMessage("<red>=============================================================".component())
     }

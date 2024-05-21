@@ -15,10 +15,6 @@ import ir.syrent.velocityvanish.velocity.listener.TabCompleteListener
 import ir.syrent.velocityvanish.velocity.vruom.VRUoMPlugin
 import ir.syrent.velocityvanish.velocity.vruom.VRuom
 import ir.syrent.velocityvanish.velocity.vruom.messaging.VelocityMessagingEvent
-import net.minecrell.serverlistplus.core.ServerListPlusCore
-import net.minecrell.serverlistplus.core.replacement.LiteralPlaceholder
-import net.minecrell.serverlistplus.core.replacement.ReplacementManager
-import net.minecrell.serverlistplus.core.status.StatusResponse
 import org.slf4j.Logger
 import java.io.File
 import java.nio.file.Path
@@ -50,45 +46,6 @@ class VelocityVanish @Inject constructor(
         initializeListeners()
         createFolder()
         initializeCommands()
-
-        try {
-            Class.forName("net.minecrell.serverlistplus.core.ServerListPlusCore")
-            initializeSLPPlaceholders()
-            VRuom.log("ServerListPlus found! hook enabled.")
-        } catch (_: Exception) {
-            VRuom.log("ServerListPlus not found! hook disabled.")
-        }
-    }
-
-    private fun initializeSLPPlaceholders() {
-        ReplacementManager.getDynamic().add(object : LiteralPlaceholder("%velocityvanish_total%") {
-            override fun replace(response: StatusResponse, s: String?): String? {
-                return run {
-                    replace(s, (VRuom.getOnlinePlayers().size - vanishedPlayersOnline().size).toString())
-                }
-            }
-
-            override fun replace(core: ServerListPlusCore?, s: String?): String? {
-                return replace(s, "0")
-            }
-        })
-
-        for (server in VRuom.getServer().allServers) {
-            ReplacementManager.getDynamic().add(object : LiteralPlaceholder("%velocityvanish_${server.serverInfo.name.lowercase()}%") {
-                override fun replace(response: StatusResponse, s: String?): String? {
-                    return run {
-                        replace(s, server.playersConnected.filter { !vanishedPlayersOnline().contains(it.username) }.size.toString())
-                    }
-                }
-
-                override fun replace(core: ServerListPlusCore?, s: String?): String? {
-                    return replace(s, "0")
-                }
-            })
-        }
-
-        ServerListPlusCore.getInstance().reload()
-        VRuom.log("ServerListPlus placeholders have been initialized.")
     }
 
     private fun initializeCommands() {
@@ -115,14 +72,6 @@ class VelocityVanish @Inject constructor(
     }
 
     private fun initializeListeners() {
-        try {
-            Class.forName("me.sayandevelopment.sayanchat.proxy.velocity.VelocitySayanChat")
-            // TODO: Fix SayanChat kotlin shade
-//            PrivateMessageListener(this)
-            VRuom.log("SayanChat found! hook enabled.")
-        } catch (_: Exception) {
-            VRuom.log("SayanChat not found! hook disabled.")
-        }
         TabCompleteListener(this)
         ProxyPingListener(this)
     }

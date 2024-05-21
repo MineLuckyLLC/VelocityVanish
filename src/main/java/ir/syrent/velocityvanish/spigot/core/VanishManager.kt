@@ -1,7 +1,5 @@
 package ir.syrent.velocityvanish.spigot.core
 
-import com.Zrips.CMI.CMI
-import com.Zrips.CMI.commands.list.vanishedit
 import com.comphenix.protocol.PacketType
 import com.comphenix.protocol.events.PacketContainer
 import com.comphenix.protocol.wrappers.EnumWrappers
@@ -40,7 +38,7 @@ class VanishManager(
     private val plugin: VelocityVanishSpigot
 ) {
 
-    val flyingPlayers = mutableListOf<UUID>()
+    private val flyingPlayers = mutableListOf<UUID>()
 
     private val potions = mutableSetOf(
         PotionEffect(PotionEffectType.NIGHT_VISION, Int.MAX_VALUE, 235, false, false),
@@ -52,7 +50,7 @@ class VanishManager(
         if (ServerVersion.supports(13)) potions.add(PotionEffect(PotionEffectType.WATER_BREATHING, Int.MAX_VALUE, 235, false, false))
     }
 
-    val invulnerablePlayers = mutableSetOf<UUID>()
+    private val invulnerablePlayers = mutableSetOf<UUID>()
 
     fun updateTabState(player: Player, state: GameMode) {
         if (Settings.seeAsSpectator) {
@@ -222,53 +220,6 @@ class VanishManager(
 
         addPotionEffects(player)
 
-        if (DependencyManager.cmiHook.exists) {
-            val cmiUser = CMI.getInstance().playerManager.getUser(player)
-            cmiUser.isVanished = true
-            CMI.getInstance().vanishManager.addPlayer(cmiUser)
-            cmiUser.vanish.set(vanishedit.VanishAction.isVanished, true)
-            cmiUser.vanish.set(vanishedit.VanishAction.informOnJoin, false)
-            cmiUser.updateVanishMode()
-        }
-
-        if (DependencyManager.essentialsXHook.exists) {
-            DependencyManager.essentialsXHook.vanish(player, true)
-        }
-
-        if (DependencyManager.sunlightHook.exists) {
-            DependencyManager.sunlightHook.vanish(player, true)
-        }
-
-        if (ServerVersion.supports(9)) {
-            denyPush(player)
-        }
-
-        /*if (DependencyManager.proCosmeticsHook.exists) {
-            Ruom.runSync({
-                try {
-                    DependencyManager.proCosmeticsHook.proCosmetics.userManager?.getUser(player.uniqueId)?.unequipCosmetics(true)
-                } catch (e: Exception) {
-                    Ruom.warn("Failed to un-equip cosmetics for player ${player.name}, is ProCosmetics up to date?")
-                }
-            }, 20)
-        }*/
-
-        if (DependencyManager.squareMapHook.exists) {
-            DependencyManager.squareMapHook.squareMap.playerManager().hide(player.uniqueId, true)
-        }
-
-        if (DependencyManager.dynmapHook.exists) {
-            DependencyManager.dynmapHook.dynmap.setPlayerVisiblity(player.name, false)
-        }
-
-        if (sendQuitMessage) {
-            if (DependencyManager.discordSRVHook.exists) {
-                if(!player.hasPermission("discordsrv.silentquit")) {
-                    DependencyManager.discordSRVHook.discordSRV.sendLeaveMessage(player, Settings.formatMessage(Message.DISCORDSRV_QUIT_MESSAGE))
-                }
-            }
-        }
-
         Settings.vanishSound.let {
             if (it != null) {
                 player.playSound(player.location, it, 1f, 1f)
@@ -334,51 +285,10 @@ class VanishManager(
 
         removePotionEffects(player)
 
-        if (DependencyManager.essentialsXHook.exists) {
-            DependencyManager.essentialsXHook.vanish(player, false)
-        }
-
-        if (DependencyManager.sunlightHook.exists) {
-            DependencyManager.sunlightHook.vanish(player, false)
-        }
-
-        if (DependencyManager.cmiHook.exists) {
-            val cmiUser = CMI.getInstance().playerManager.getUser(player)
-            cmiUser.isVanished = false
-            CMI.getInstance().vanishManager.removePlayer(cmiUser)
-            cmiUser.vanish.set(vanishedit.VanishAction.isVanished, false)
-            cmiUser.vanish.set(vanishedit.VanishAction.informOnJoin, true)
-            cmiUser.updateVanishMode()
-        }
-
         Utils.actionbarPlayers.remove(player)
 
         if (ServerVersion.supports(9)) {
             allowPush(player)
-        }
-
-        /*if (DependencyManager.proCosmeticsHook.exists) {
-            try {
-                DependencyManager.proCosmeticsHook.proCosmetics.userManager?.getUser(player.uniqueId)?.equipLastCosmetics(true)
-            } catch (e: Exception) {
-                Ruom.warn("Failed to equip cosmetics for player ${player.name}, is ProCosmetics up to date?")
-            }
-        }*/
-
-        if (DependencyManager.squareMapHook.exists) {
-            DependencyManager.squareMapHook.squareMap.playerManager().show(player.uniqueId, true)
-        }
-
-        if (DependencyManager.dynmapHook.exists) {
-            DependencyManager.dynmapHook.dynmap.setPlayerVisiblity(player.name, true)
-        }
-
-        if (sendJoinMessage) {
-            if (DependencyManager.discordSRVHook.exists) {
-                if(!player.hasPermission("discordsrv.silentjoin")) {
-                    DependencyManager.discordSRVHook.discordSRV.sendJoinMessage(player, Settings.formatMessage(Message.DISCORDSRV_JOIN_MESSAGE))
-                }
-            }
         }
 
         Settings.unVanishSound.let {

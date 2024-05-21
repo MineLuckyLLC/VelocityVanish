@@ -11,7 +11,7 @@ class PlayerGameModeChangeListener(
 ) : Listener {
 
     @EventHandler
-    private fun onAfkStatusChange(event: PlayerGameModeChangeEvent) {
+    private fun onPlayerGamemodeChange(event: PlayerGameModeChangeEvent) {
         val player = event.player
         if (!plugin.vanishedNames.contains(player.name)) return
 
