@@ -2,10 +2,10 @@ import io.papermc.hangarpublishplugin.model.Platforms
 import org.jetbrains.gradle.ext.settings
 import org.jetbrains.gradle.ext.taskTriggers
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.ByteArrayOutputStream
 import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
-import java.io.ByteArrayOutputStream
 
 plugins {
     kotlin("jvm") version "1.9.22"
@@ -122,6 +122,7 @@ dependencies {
 
     // gson does not exist in legacy minecraft version
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("commons-io:commons-io:2.16.1")
 
     implementation("com.github.cryptomorin:XSeries:9.8.1") { isTransitive = false }
 
