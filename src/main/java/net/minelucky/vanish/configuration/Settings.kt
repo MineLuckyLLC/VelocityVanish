@@ -1,23 +1,12 @@
-package net.minelucky.vanish.storage
+package net.minelucky.vanish.configuration
 
 import com.cryptomorin.xseries.XSound
-import me.clip.placeholderapi.PlaceholderAPI
-import net.minelucky.vanish.configuration.YamlConfig
-import net.minelucky.vanish.hook.DependencyManager
 import net.minelucky.vanish.ruom.Ruom
-import net.minelucky.vanish.ruom.adventure.AdventureApi
-import net.minelucky.vanish.utils.TextReplacement
-import net.minelucky.vanish.utils.component
+import net.minelucky.vanish.utils.string.TextReplacement
 import org.bukkit.Sound
 import org.bukkit.configuration.file.FileConfiguration
-import org.bukkit.entity.Player
-import java.io.File
-import java.nio.file.Files
-import java.time.LocalDate
 
 object Settings {
-
-    private const val LATEST_CONFIG_VERSION = 7
 
     lateinit var settings: YamlConfig
     private lateinit var language: YamlConfig
@@ -26,9 +15,7 @@ object Settings {
 
     private val messages = mutableMapOf<Message, String>()
 
-    private var settingsConfigVersion = 1
-
-    private lateinit var defaultLanguage: String
+    var redisURI: String? = null
 
     var commandSound: Sound? = null
     var vanishSound: Sound? = null
@@ -36,7 +23,6 @@ object Settings {
 
     var actionbar = true
     var seeAsSpectator = true
-    var invincible = true
     var silentOpenContainer = true
 
     var preventPickup = true
@@ -52,24 +38,7 @@ object Settings {
         settings = YamlConfig(Ruom.plugin.dataFolder, "settings.yml")
         settingsConfig = settings.config
 
-        settingsConfigVersion = settingsConfig.getInt("config_version", 1)
-
-        if (settingsConfigVersion < LATEST_CONFIG_VERSION) {
-            val backupFileName = "settings.yml-bak-${LocalDate.now()}"
-            val settingsFile = File(Ruom.plugin.dataFolder, "settings.yml")
-            val backupFile = File(Ruom.plugin.dataFolder, backupFileName)
-
-            if (backupFile.exists())
-                backupFile.delete()
-
-            Files.copy(settingsFile.toPath(), backupFile.toPath())
-            settingsFile.delete()
-            settings = YamlConfig(Ruom.plugin.dataFolder, "settings.yml")
-            settingsConfig = settings.config
-            sendBackupMessage(backupFileName)
-        }
-
-        defaultLanguage = settingsConfig.getString("default_language") ?: "en_US"
+        redisURI = settingsConfig.getString("redis_uri") ?: "redis://localhost:6379"
 
         commandSound = settingsConfig.getString("sounds.command")?.let {
             runCatching { XSound.valueOf(it).parseSound() }.getOrNull()
@@ -83,7 +52,6 @@ object Settings {
 
         actionbar = settingsConfig.getBoolean("vanish.actionbar")
         seeAsSpectator = settingsConfig.getBoolean("vanish.see_as_spectator")
-        invincible = settingsConfig.getBoolean("vanish.invincible")
         silentOpenContainer = settingsConfig.getBoolean("vanish.silent_open_container")
 
         preventPickup = settingsConfig.getBoolean("vanish.prevent.pickup")
@@ -91,10 +59,7 @@ object Settings {
         preventBlockPlace = settingsConfig.getBoolean("vanish.prevent.block_place")
         preventInteract = settingsConfig.getBoolean("vanish.prevent.interact")
 
-        language = YamlConfig(
-            Ruom.plugin.dataFolder,
-            "languages/$defaultLanguage.yml"
-        )
+        language = YamlConfig(Ruom.plugin.dataFolder, "messages.yml")
         languageConfig = language.config
 
         messages.apply {
@@ -105,7 +70,9 @@ object Settings {
                     continue
                 }
 
-                this[message] = languageConfig.getString(message.path) ?: languageConfig.getString(Message.UNKNOWN_MESSAGE.path) ?: "Cannot find message: ${message.name}"
+                this[message] =
+                    languageConfig.getString(message.path) ?: languageConfig.getString(Message.UNKNOWN_MESSAGE.path)
+                            ?: "Cannot find message: ${message.name}"
             }
         }
 
@@ -114,17 +81,6 @@ object Settings {
         language.saveConfig()
         language.reloadConfig()
     }
-
-
-    fun formatMessage(player: Player, message: String, vararg replacements: TextReplacement): String {
-        var formattedMessage = formatMessage(message, *replacements)
-
-        if (DependencyManager.placeholderAPIHook.exists)
-            formattedMessage = PlaceholderAPI.setPlaceholders(player, formattedMessage)
-
-        return formattedMessage
-    }
-
 
     fun formatMessage(message: String, vararg replacements: TextReplacement): String {
         var formattedMessage = message
@@ -137,10 +93,6 @@ object Settings {
             formattedMessage = formattedMessage.replace("\$${replacement.from}", replacement.to)
 
         return formattedMessage
-    }
-
-    fun formatMessage(player: Player, message: Message, vararg replacements: TextReplacement): String {
-        return formatMessage(player, getMessage(message), *replacements)
     }
 
     fun formatMessage(message: Message, vararg replacements: TextReplacement): String {
@@ -165,12 +117,5 @@ object Settings {
 
     fun getConsolePrefix(): String {
         return getMessage(Message.CONSOLE_PREFIX)
-    }
-
-    private fun sendBackupMessage(fileName: String) {
-        AdventureApi.get().console().sendMessage("<red>=============================================================".component())
-        AdventureApi.get().console().sendMessage("<red>Config version updated to $LATEST_CONFIG_VERSION. Please set your preferred values again.".component())
-        AdventureApi.get().console().sendMessage("<gray>Previous values are still accessible via $fileName in plugin folder.".component())
-        AdventureApi.get().console().sendMessage("<red>=============================================================".component())
     }
 }

@@ -9,6 +9,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.metadata.FixedMetadataValue
+import java.util.*
 
 class PlayerJoinListener(
     private val plugin: GoodbyeGonePoof
@@ -21,18 +22,15 @@ class PlayerJoinListener(
     @EventHandler(priority = EventPriority.LOWEST)
     private fun onPlayerJoin(event: PlayerJoinEvent) {
         handleVanishOnJoin(event)
-        /*Ruom.runSync({
-            handleVanishOnJoin(event)
-        }, 15)*/
     }
 
-    fun handleVanishOnJoin(event: PlayerJoinEvent) {
+    private fun handleVanishOnJoin(event: PlayerJoinEvent) {
         val player = event.player
 
         // Note: DiscordSRV support
         player.setMetadata("vanished", FixedMetadataValue(plugin, true))
 
-        for (vanishedPlayer in plugin.vanishedNames.mapNotNull { Bukkit.getPlayerExact(it) }) {
+        for (vanishedPlayer in plugin.getVanishedPlayers().keys.mapNotNull { Bukkit.getPlayer(UUID.fromString(it)) }) {
             println("Vanished Player: " + vanishedPlayer.name)
             plugin.vanishManager.hidePlayer(vanishedPlayer)
             plugin.vanishManager.updateTabState(vanishedPlayer, GameMode.SPECTATOR)
@@ -42,12 +40,11 @@ class PlayerJoinListener(
             }, 1)
         }
 
-        println("Vanished Names: " + plugin.vanishedNames.toString())
+        println("Vanished: " + plugin.getVanishedPlayers().toString())
 
-        if (plugin.vanishedNames.contains(player.name)) {
+        if (plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
             plugin.vanishManager.vanish(player, callPostEvent = true)
-        } else {
+        else
             plugin.vanishManager.unVanish(player, callPostEvent = false)
-        }
     }
 }

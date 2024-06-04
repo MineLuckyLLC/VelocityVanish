@@ -1,4 +1,4 @@
-package net.minelucky.vanish.storage
+package net.minelucky.vanish.configuration
 
 enum class Message(val path: String) {
     RAW_PREFIX("general.raw_prefix"),

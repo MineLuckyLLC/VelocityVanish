@@ -12,18 +12,17 @@ import net.minelucky.nms.accessors.ClientboundUpdateMobEffectPacketAccessor
 import net.minelucky.nms.accessors.MobEffectAccessor
 import net.minelucky.nms.accessors.MobEffectInstanceAccessor
 import net.minelucky.vanish.GoodbyeGonePoof
+import net.minelucky.vanish.configuration.Message
+import net.minelucky.vanish.configuration.Settings
 import net.minelucky.vanish.event.PostUnVanishEvent
 import net.minelucky.vanish.event.PostVanishEvent
 import net.minelucky.vanish.event.PreUnVanishEvent
 import net.minelucky.vanish.event.PreVanishEvent
-import net.minelucky.vanish.hook.DependencyManager
 import net.minelucky.vanish.ruom.Ruom
-import net.minelucky.vanish.storage.Message
-import net.minelucky.vanish.storage.Settings
 import net.minelucky.vanish.utils.NMSUtils
-import net.minelucky.vanish.utils.TextReplacement
 import net.minelucky.vanish.utils.Utils
 import net.minelucky.vanish.utils.sendMessage
+import net.minelucky.vanish.utils.string.TextReplacement
 import org.bukkit.GameMode
 import org.bukkit.entity.Creature
 import org.bukkit.entity.Player
@@ -46,46 +45,41 @@ class VanishManager(
     )
 
     fun updateTabState(player: Player, state: GameMode) {
-        if (Settings.seeAsSpectator) {
-            if (DependencyManager.protocolLibHook.exists) {
-                try {
-                    val tabPacket = DependencyManager.protocolLibHook.protocolManager?.createPacket(
-                        PacketType.Play.Server.PLAYER_INFO,
-                        true
+        if (Settings.seeAsSpectator)
+            try {
+                val tabPacket = plugin.protocolManager?.createPacket(
+                    PacketType.Play.Server.PLAYER_INFO,
+                    true
+                )
+
+                val infoData = tabPacket?.playerInfoDataLists
+                val infoAction = tabPacket?.playerInfoAction
+
+                val playerInfo = infoData?.read(0)
+
+                playerInfo?.add(
+                    PlayerInfoData(
+                        WrappedGameProfile.fromPlayer(player),
+                        0,
+                        NativeGameMode.valueOf(state.name),
+                        WrappedChatComponent.fromText(player.playerListName)
                     )
+                )
 
-                    val infoData = tabPacket?.playerInfoDataLists
-                    val infoAction = tabPacket?.playerInfoAction
+                infoData?.write(0, playerInfo)
+                infoAction?.write(0, EnumWrappers.PlayerInfoAction.UPDATE_GAME_MODE)
 
-                    val playerInfo = infoData?.read(0)
+                val newTabPacket = PacketContainer(PacketType.Play.Server.PLAYER_INFO, tabPacket?.handle)
 
-                    playerInfo?.add(
-                        PlayerInfoData(
-                            WrappedGameProfile.fromPlayer(player),
-                            0,
-                            NativeGameMode.valueOf(state.name),
-                            WrappedChatComponent.fromText(player.playerListName)
-                        )
-                    )
-
-                    infoData?.write(0, playerInfo)
-                    infoAction?.write(0, EnumWrappers.PlayerInfoAction.UPDATE_GAME_MODE)
-
-                    val newTabPacket = PacketContainer(PacketType.Play.Server.PLAYER_INFO, tabPacket?.handle)
-
-                    for (onlinePlayer in Ruom.onlinePlayers.filter { it.hasPermission("velocityvanish.admin.seevanished") }
-                        .filter { it != player }) {
-                        DependencyManager.protocolLibHook.protocolManager?.sendServerPacket(onlinePlayer, newTabPacket)
-                    }
-                } catch (_: Exception) {
-                    Ruom.warn("Couldn't vanish player using ProtocolLib, Is you server/plugins up-to-date?")
-                }
+                for (onlinePlayer in Ruom.onlinePlayers.filter { it.hasPermission("vanish.admin.seevanished") && it != player })
+                    plugin.protocolManager?.sendServerPacket(onlinePlayer, newTabPacket)
+            } catch (_: Exception) {
+                Ruom.warn("Couldn't vanish player using ProtocolLib")
             }
-        }
     }
 
     fun hidePlayer(player: Player) {
-        for (onlinePlayer in Ruom.onlinePlayers.filter { !it.hasPermission("velocityvanish.admin.seevanished") }) {
+        for (onlinePlayer in Ruom.onlinePlayers.filter { !it.hasPermission("vanish.admin.seevanished") }) {
             val onlinePlayerVanishLevel = getVanishLevel(onlinePlayer)
             if (onlinePlayerVanishLevel >= getVanishLevel(player) && getVanishLevel(player) != 0)
                 continue
@@ -96,7 +90,7 @@ class VanishManager(
 
     fun getVanishLevel(player: Player): Int {
         return player.effectivePermissions.map { it.permission }
-            .filter { it.startsWith("velocityvanish.level.") }.maxOfOrNull { it.split(".")[2].toInt() } ?: 0
+            .filter { it.startsWith("vanish.level.") }.maxOfOrNull { it.split(".")[2].toInt() } ?: 0
     }
 
     private fun setMeta(player: Player, meta: Boolean) {
@@ -106,7 +100,9 @@ class VanishManager(
     fun addPotionEffects(player: Player) {
         Ruom.runSync({
             for (potionEffect in potions) {
-                if (player.hasPotionEffect(potionEffect.type)) continue
+                if (player.hasPotionEffect(potionEffect.type))
+                    continue
+
                 try {
                     @Suppress("DEPRECATION") val mobEffect = MobEffectInstanceAccessor.getConstructor0().newInstance(
                         MobEffectAccessor.getMethodById1().invoke(null, potionEffect.type.id),
@@ -127,7 +123,7 @@ class VanishManager(
         }, 2)
     }
 
-    fun removePotionEffects(player: Player) {
+    private fun removePotionEffects(player: Player) {
         Ruom.runSync({
             for (potionEffect in potions) {
                 try {
@@ -145,7 +141,7 @@ class VanishManager(
         }, 2)
     }
 
-    fun denyPush(player: Player) {
+    private fun denyPush(player: Player) {
         var team = player.scoreboard.getTeam("Vanished")
 
         if (team == null)
@@ -154,24 +150,18 @@ class VanishManager(
         team.addEntry(player.name)
     }
 
-    fun allowPush(player: Player) {
+    private fun allowPush(player: Player) {
         player.scoreboard.getTeam("Vanished")?.removeEntry(player.name)
     }
 
     fun vanish(player: Player, callPostEvent: Boolean = false) {
-        vanish(player, callPostEvent, false)
-    }
-
-    fun vanish(
-        player: Player,
-        callPostEvent: Boolean = false,
-        notifyAdmins: Boolean = false
-    ) {
         val preVanishEvent = PreVanishEvent(player)
         GoodbyeGonePoof.instance.server.pluginManager.callEvent(preVanishEvent)
 
         if (preVanishEvent.isCancelled)
             return
+
+        plugin.redisConnection?.sync()?.hset("vanished-players", player.uniqueId.toString(), player.name)
 
         setMeta(player, true)
 
@@ -181,11 +171,8 @@ class VanishManager(
         if (player.isFlying || player.allowFlight)
             flyingPlayers.add(player.uniqueId)
 
-        if (player.hasPermission("velocityvanish.action.fly.onvanish") || player.isOp || player.allowFlight) {
-            player.allowFlight = true
-            player.isFlying = true
-        }
-
+        player.allowFlight = true
+        player.isFlying = true
         player.isSleepingIgnored = true
         player.spigot().collidesWithEntities = false
 
@@ -198,13 +185,14 @@ class VanishManager(
 
         addPotionEffects(player)
 
+        denyPush(player)
+
         Settings.vanishSound.let {
             if (it != null)
                 player.playSound(player.location, it, 1f, 1f)
         }
 
         Utils.sendVanishActionbar(player)
-        plugin.vanishedNames.add(player.name)
 
         if (callPostEvent)
             GoodbyeGonePoof.instance.server.pluginManager.callEvent(
@@ -213,25 +201,18 @@ class VanishManager(
                 )
             )
 
-        if (notifyAdmins)
-            for (staff in Ruom.onlinePlayers.filter { it.hasPermission("velocityvanish.admin.notify") && it != player })
-                staff.sendMessage(Message.VANISH_NOTIFY, TextReplacement("player", player.name))
+        for (staff in Ruom.onlinePlayers.filter { it.hasPermission("vanish.admin.seevanished") && it != player })
+            staff.sendMessage(Message.VANISH_NOTIFY, TextReplacement("player", player.name))
     }
 
     fun unVanish(player: Player, callPostEvent: Boolean = false) {
-        unVanish(player, callPostEvent, false)
-    }
-
-    fun unVanish(
-        player: Player,
-        callPostEvent: Boolean = false,
-        notifyAdmins: Boolean = false
-    ) {
         val preUnVanishEvent = PreUnVanishEvent(player)
         GoodbyeGonePoof.instance.server.pluginManager.callEvent(preUnVanishEvent)
 
         if (preUnVanishEvent.isCancelled)
             return
+
+        plugin.redisConnection?.sync()?.hdel("vanished-players", player.uniqueId.toString())
 
         setMeta(player, false)
 
@@ -246,7 +227,7 @@ class VanishManager(
             onlinePlayer.showPlayer(player)
 
         player.isSleepingIgnored = false
-        player.spigot().collidesWithEntities = true;
+        player.spigot().collidesWithEntities = true
 
         removePotionEffects(player)
 
@@ -254,13 +235,7 @@ class VanishManager(
 
         allowPush(player)
 
-        Settings.unVanishSound.let {
-            if (it != null)
-                player.playSound(player.location, it, 1f, 1f)
-        }
-
         Utils.sendVanishActionbar(player)
-        plugin.vanishedNames.remove(player.name)
 
         if (callPostEvent)
             GoodbyeGonePoof.instance.server.pluginManager.callEvent(
@@ -269,8 +244,7 @@ class VanishManager(
                 )
             )
 
-        if (notifyAdmins)
-            for (staff in Ruom.onlinePlayers.filter { it.hasPermission("velocityvanish.admin.notify") && it != player })
-                staff.sendMessage(Message.UNVANISH_NOTIFY, TextReplacement("player", player.name))
+        for (staff in Ruom.onlinePlayers.filter { it.hasPermission("vanish.admin.seevanished") && it != player })
+            staff.sendMessage(Message.UNVANISH_NOTIFY, TextReplacement("player", player.name))
     }
 }

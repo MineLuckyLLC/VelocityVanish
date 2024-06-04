@@ -1,67 +1,82 @@
 package net.minelucky.vanish
 
 import com.comphenix.protocol.PacketType
+import com.comphenix.protocol.ProtocolLibrary
+import com.comphenix.protocol.ProtocolManager
 import com.comphenix.protocol.events.ListenerOptions
 import com.comphenix.protocol.events.ListenerPriority
 import com.comphenix.protocol.events.PacketAdapter
 import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.WrappedGameProfile
+import io.lettuce.core.RedisClient
+import io.lettuce.core.api.StatefulRedisConnection
 import net.minelucky.vanish.command.VanishCommand
+import net.minelucky.vanish.configuration.Settings
 import net.minelucky.vanish.core.VanishManager
-import net.minelucky.vanish.hook.DependencyManager
 import net.minelucky.vanish.listener.*
+import net.minelucky.vanish.ruom.RUoMPlugin
 import net.minelucky.vanish.ruom.Ruom
-import net.minelucky.vanish.ruom.adventure.AdventureApi
-import net.minelucky.vanish.storage.Settings
 import net.minelucky.vanish.utils.Utils
-import net.minelucky.vanish.utils.component
+import net.minelucky.vanish.utils.adventure.AdventureApi
+import net.minelucky.vanish.utils.string.component
+import java.util.logging.Level
 
 
-class GoodbyeGonePoof : net.minelucky.vanish.ruom.RUoMPlugin() {
+class GoodbyeGonePoof : RUoMPlugin() {
 
-//    var bridgeManager: BukkitBridgeManager? = null
+    private var redisClient: RedisClient? = null
+    var redisConnection: StatefulRedisConnection<String, String>? = null
+
     lateinit var vanishManager: VanishManager
         private set
 
-    val proxyPlayers = mutableMapOf<String, List<String>>()
-    val vanishedNames = mutableSetOf<String>()
-    val vanishedNamesOnline = mutableSetOf<String>()
+    var protocolManager: ProtocolManager? = null;
 
     override fun onEnable() {
         instance = this
         dataFolder.mkdir()
 
-        initializeInstances()
+        Settings
+
+        redisClient = RedisClient.create(Settings.redisURI)
+
+        redisClient?.let { client ->
+                redisConnection = client.connect()
+                logger.log(
+                    Level.INFO,
+                    "Redis Connected: " + redisConnection?.isOpen + ", PING: " + redisConnection?.sync()?.ping()
+                )
+        }
+
+        protocolManager = ProtocolLibrary.getProtocolManager();
+        AdventureApi.initialize()
+        vanishManager = VanishManager(this)
+
         resetData(true)
-        sendWarningMessages()
-        initializeCommands()
+
+        VanishCommand(this)
+
         initializeListeners()
 
-        if (DependencyManager.protocolLibHook.exists) {
-            DependencyManager.protocolLibHook.protocolManager?.addPacketListener(
-                object : PacketAdapter(
-                    this,
-                    ListenerPriority.NORMAL,
-                    listOf(PacketType.Status.Server.SERVER_INFO),
-                    ListenerOptions.ASYNC
-                ) {
-                    override fun onPacketSending(event: PacketEvent?) {
-                        event?.packet?.serverPings?.let { serverPing ->
-                            serverPing.read(0).setPlayers(
-                                Ruom.onlinePlayers.filter { player -> !vanishedNames.contains(player.name) }
-                                    .map { player ->
-                                        WrappedGameProfile(player.uniqueId, player.name)
-                                    }
-                            )
-                        }
+        protocolManager?.addPacketListener(
+            object : PacketAdapter(
+                this,
+                ListenerPriority.NORMAL,
+                listOf(PacketType.Status.Server.SERVER_INFO),
+                ListenerOptions.ASYNC
+            ) {
+                override fun onPacketSending(event: PacketEvent?) {
+                    event?.packet?.serverPings?.let { serverPing ->
+                        serverPing.read(0).setPlayers(
+                            Ruom.onlinePlayers.filter { player -> !getVanishedPlayers().containsKey(player.uniqueId.toString()) }
+                                .map { player ->
+                                    WrappedGameProfile(player.uniqueId, player.name)
+                                }
+                        )
                     }
                 }
-            )
-        }
-    }
-
-    private fun sendWarningMessages() {
-        DependencyManager
+            }
+        )
     }
 
     private fun resetData(startup: Boolean) {
@@ -75,17 +90,6 @@ class GoodbyeGonePoof : net.minelucky.vanish.ruom.RUoMPlugin() {
         } catch (_: Exception) {
             Ruom.warn("Plugin didn't fully complete reset data task on plugin shutdown")
         }
-    }
-
-    private fun initializeInstances() {
-        AdventureApi.initialize()
-        vanishManager = VanishManager(this)
-
-        Settings
-    }
-
-    private fun initializeCommands() {
-        VanishCommand(this)
     }
 
     private fun initializeListeners() {
@@ -103,21 +107,17 @@ class GoodbyeGonePoof : net.minelucky.vanish.ruom.RUoMPlugin() {
         PlayerGameModeChangeListener(this)
     }
 
-//    private fun initializePluginChannels() {
-//        val bridge = BukkitBridge()
-//        bridgeManager = BukkitBridgeManager(bridge, this)
-//
-//        object : BukkitMessagingEvent(bridge) {
-//            override fun onPluginMessageReceived(player: Player, jsonObject: JsonObject) {
-//                bridgeManager!!.handleMessage(jsonObject)
-//            }
-//        }
-//    }
-
     override fun onDisable() {
         Ruom.shutdown()
 
         resetData(false)
+
+        redisConnection?.close()
+        redisClient?.close()
+    }
+
+    fun getVanishedPlayers(): Map<String, String> {
+        return redisConnection?.sync()?.hgetall("vanished-players") ?: emptyMap()
     }
 
     private fun sendConsoleMessage(message: String) {

@@ -3,20 +3,19 @@ package net.minelucky.vanish.utils
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.minelucky.vanish.GoodbyeGonePoof
+import net.minelucky.vanish.configuration.Message
+import net.minelucky.vanish.configuration.Settings
 import net.minelucky.vanish.ruom.Ruom
-import net.minelucky.vanish.ruom.string.CharAnimation
-import net.minelucky.vanish.storage.Message
-import net.minelucky.vanish.storage.Settings
+import net.minelucky.vanish.utils.string.CharAnimation
+import net.minelucky.vanish.utils.string.TextReplacement
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 
 object Utils {
 
-    // TODO: Crate new Actionbar class
-
     val actionbarPlayers = mutableSetOf<Player>()
-    val charAnimation = CharAnimation(CharAnimation.Style.SQUARE_BLOCK)
+    private val charAnimation = CharAnimation(CharAnimation.Style.SQUARE_BLOCK)
     var lastChar = ""
 
     init {
@@ -29,7 +28,7 @@ object Utils {
         if (actionbarPlayers.contains(player))
             return
 
-        if (Settings.actionbar && player.hasPermission("velocityvanish.admin.actionbar"))
+        if (Settings.actionbar)
             object : BukkitRunnable() {
                 override fun run() {
                     if (Bukkit.getPlayer(player.uniqueId) == null) {
@@ -37,7 +36,7 @@ object Utils {
                         return
                     }
 
-                    if (!GoodbyeGonePoof.instance.vanishedNames.contains(player.name))
+                    if (!GoodbyeGonePoof.instance.getVanishedPlayers().containsKey(player.uniqueId.toString()))
                         return
 
                     player.sendActionbar(Message.VANISH_ACTIONBAR, TextReplacement("animation", lastChar))

@@ -10,59 +10,40 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
     id("org.screamingsandals.nms-mapper") version "1.4.6"
-    id("xyz.jpenilla.run-paper") version "2.2.2"
 }
 
 val versionString: String = findProperty("version")!! as String
 
 val slug = "goodbyegonepoof"
-group = "net.minelucky.vanish"
+group = "net.minelucky"
 version = versionString
-description = "Modern vanish system"
+description = "Modern Vanish"
 
 repositories {
     mavenLocal()
     mavenCentral()
 
+    // Commons-IO
     maven("https://repo.maven.apache.org/maven2/")
 
-    // Velocity-API / PaperLib / Folia
-    maven("https://repo.papermc.io/repository/maven-public/")
-
+    // Configurate-YAML
     maven("https://repo.spongepowered.org/maven")
 
     // AdventureAPI/MiniMessage
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
 
-    // Spigot
-    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-    maven("https://oss.sonatype.org/content/repositories/central")
-
     // ProtocolLib
     maven("https://repo.dmulloy2.net/repository/public/")
-
-    // PlaceholderAPI
-    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
-
-    // Mojang
-    maven("https://repo.aikar.co/nexus/content/repositories/aikar-release/")
 
     // Cloud SNAPSHOT (Dev repository)
     maven("https://repo.masmc05.dev/repository/maven-snapshots/")
 }
 
 dependencies {
-    compileOnly("com.velocitypowered:velocity-api:3.1.1")
     compileOnly("org.spigotmc:pandaspigot-server:1.8.8-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
-    compileOnly("me.clip:placeholderapi:2.11.5")
     compileOnly("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
-    compileOnly("com.mojang:authlib:1.11")
-    compileOnly("io.netty:netty-all:4.1.104.Final")
-
-    implementation("io.papermc:paperlib:1.0.8")
-    implementation("org.bstats:bstats-bukkit:3.0.2")
+    compileOnly("io.lettuce:lettuce-core:6.3.2.RELEASE")
 
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("commons-io:commons-io:2.16.1")
@@ -77,26 +58,25 @@ dependencies {
     implementation("cloud.commandframework:cloud-minecraft-extras:tooltips-SNAPSHOT")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
-    annotationProcessor("com.velocitypowered:velocity-api:3.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 }
 
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            groupId = "net.minelucky.vanish"
-            artifactId = "GoodbyeGonePoof"
-            version = "3.27.2-SNAPSHOT"
-
             from(components["java"])
+
+            groupId = "net.minelucky"
+            artifactId = "GoodbyeGonePoof"
+            version = "3.27.2"
         }
     }
 
     publishing {
         repositories {
             maven {
-                name = "minelucky-snapshots"
-                url = uri("https://nexus.minelucky.net/repository/maven-snapshots/")
+                name = "minelucky-releases"
+                url = uri("https://nexus.minelucky.net/repository/maven-releases/")
                 credentials {
                     val username = System.getenv("MINELUCKY_REPO_USERNAME")
                     val password = System.getenv("MINELUCKY_REPO_PASSWORD")
@@ -118,10 +98,6 @@ publishing {
 }
 
 tasks {
-    runServer {
-        minecraftVersion("1.8.8")
-    }
-
     compileJava {
         options.encoding = Charsets.UTF_8.name()
         dependsOn(clean)
@@ -145,7 +121,6 @@ tasks {
         from("LICENSE")
         minimize()
 
-        relocate("io.papermc.lib", "net.minelucky.vanish.dependencies.io.papermc.lib")
         relocate("io.leangen", "net.minelucky.vanish.dependencies.io.leangen")
         relocate("com.google.gson", "net.minelucky.vanish.dependencies.com.google.gson")
         relocate("com.cryptomorin", "net.minelucky.vanish.dependencies.com.github.cryptomorin")

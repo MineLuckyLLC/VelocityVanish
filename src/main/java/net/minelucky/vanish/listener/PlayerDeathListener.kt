@@ -18,7 +18,7 @@ class PlayerDeathListener(
     private fun onPlayerDeath(event: PlayerDeathEvent) {
         val player = event.entity
 
-        if (plugin.vanishedNames.contains(player.name))
+        if (plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
             event.deathMessage = null
     }
 }

@@ -1,4 +1,4 @@
-package net.minelucky.vanish.ruom.string;
+package net.minelucky.vanish.utils.string;
 
 public class CharAnimation {
 

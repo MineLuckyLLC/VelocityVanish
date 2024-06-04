@@ -2,7 +2,6 @@ package net.minelucky.vanish.listener
 
 import net.minelucky.vanish.GoodbyeGonePoof
 import net.minelucky.vanish.ruom.Ruom
-import net.minelucky.vanish.storage.Settings
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -23,8 +22,7 @@ class EntityDamageListener(
         if (entity !is Player)
             return
 
-        if (Settings.invincible)
-            if (plugin.vanishedNames.contains(entity.name))
-                event.isCancelled = true
+        if (plugin.getVanishedPlayers().containsKey(entity.uniqueId.toString()))
+            event.isCancelled = true
     }
 }

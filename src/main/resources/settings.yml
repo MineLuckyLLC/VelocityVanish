@@ -1,6 +1,4 @@
-# Full wiki is available at https://github.com/Syrent/VelocityVanish/wiki
-config_version: 7
-default_language: en_US
+redis_uri: 'redis://localhost:6379'
 
 # Leave sounds blank to disable them
 # Example: command: ""
@@ -17,9 +15,6 @@ vanish:
     # Note: Requires ProtocolLib in versions lower than 1.19
     see_as_spectator: true
 
-    # Should vanished players be protected from all damage sources?
-    invincible: true
-
     silent_open_container: true
 
     prevent:
@@ -27,7 +22,3 @@ vanish:
         block_break: false
         block_place: false
         interact: false
-
-hooks:
-    essentials:
-        force_prevent_private_messages: false

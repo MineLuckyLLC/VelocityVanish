@@ -22,7 +22,7 @@ class EntityTargetListener(
         if (target !is Player)
             return
 
-        if (plugin.vanishedNames.contains(target.name))
+        if (plugin.getVanishedPlayers().containsKey(target.uniqueId.toString()))
             event.target = null
     }
 }

@@ -4,7 +4,4 @@ version: '${version}'
 authors: [ "MineLucky Development Team" ]
 description: '${description}'
 softdepend:
-  - 'DiscordSRV'
   - 'ProtocolLib'
-  - 'PlaceholderAPI'
-  - 'Essentials'

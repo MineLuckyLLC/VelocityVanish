@@ -18,7 +18,7 @@ class PlayerChangedWorldListener(
     private fun onPlayerChangedWorld(event: PlayerChangedWorldEvent) {
         val player = event.player
 
-        if (plugin.vanishedNames.contains(player.name))
+        if (plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
             plugin.vanishManager.addPotionEffects(player)
     }
 }

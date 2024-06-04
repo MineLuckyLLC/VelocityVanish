@@ -1,4 +1,4 @@
-package net.minelucky.vanish.utils
+package net.minelucky.vanish.utils.string
 
 class TextReplacement(
     val from: String,

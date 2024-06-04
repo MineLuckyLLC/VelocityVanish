@@ -1,8 +1,8 @@
 package net.minelucky.vanish.listener
 
 import net.minelucky.vanish.GoodbyeGonePoof
+import net.minelucky.vanish.configuration.Settings
 import net.minelucky.vanish.ruom.Ruom
-import net.minelucky.vanish.storage.Settings
 import org.bukkit.GameMode
 import org.bukkit.Material
 import org.bukkit.event.EventHandler
@@ -24,7 +24,7 @@ class PlayerInteractListener(
     private fun preventInteract(event: PlayerInteractEvent) {
         val player = event.player
 
-        if (plugin.vanishedNames.contains(player.name) && Settings.preventInteract && !player.hasPermission("velocityvanish.bypass.prevention.interact"))
+        if (plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()) && Settings.preventInteract && !player.hasPermission("vanish.bypass.prevention.interact"))
             event.isCancelled = true
     }
 
@@ -33,7 +33,7 @@ class PlayerInteractListener(
         val player = event.player
         val block = event.clickedBlock ?: return
 
-        if (!plugin.vanishedNames.contains(player.name))
+        if (!plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
             return
 
         if (event.action != Action.PHYSICAL && event.clickedBlock == null)
@@ -62,7 +62,7 @@ class PlayerInteractListener(
 
         val player = event.player
 
-        if (!plugin.vanishedNames.contains(player.name))
+        if (!plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
             return
 
         if (block.type == Material.ENDER_CHEST) {

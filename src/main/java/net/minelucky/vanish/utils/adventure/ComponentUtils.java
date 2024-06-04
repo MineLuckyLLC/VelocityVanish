@@ -1,4 +1,4 @@
-package net.minelucky.vanish.ruom.adventure;
+package net.minelucky.vanish.utils.adventure;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;

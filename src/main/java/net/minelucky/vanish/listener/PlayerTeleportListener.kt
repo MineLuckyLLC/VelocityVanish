@@ -7,6 +7,7 @@ import org.bukkit.GameMode
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerTeleportEvent
+import java.util.*
 
 class PlayerTeleportListener(
     private val plugin: GoodbyeGonePoof
@@ -18,9 +19,10 @@ class PlayerTeleportListener(
 
     @EventHandler
     private fun onPlayerTeleport(event: PlayerTeleportEvent) {
-        if (event.from.world == event.to?.world) return
+        if (event.from.world == event.to?.world)
+            return
 
-        for (vanishedPlayer in plugin.vanishedNames.mapNotNull { Bukkit.getPlayerExact(it) })
+        for (vanishedPlayer in plugin.getVanishedPlayers().keys.mapNotNull { Bukkit.getPlayer(UUID.fromString(it)) })
             plugin.vanishManager.updateTabState(vanishedPlayer, GameMode.SPECTATOR)
     }
 }

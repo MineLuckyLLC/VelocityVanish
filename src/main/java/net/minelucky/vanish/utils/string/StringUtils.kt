@@ -1,4 +1,4 @@
-package net.minelucky.vanish.utils
+package net.minelucky.vanish.utils.string
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage

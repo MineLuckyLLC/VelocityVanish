@@ -14,7 +14,7 @@ class PlayerGameModeChangeListener(
     private fun onPlayerGamemodeChange(event: PlayerGameModeChangeEvent) {
         val player = event.player
 
-        if (!plugin.vanishedNames.contains(player.name))
+        if (!plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
             return
 
         plugin.vanishManager.updateTabState(player, GameMode.SPECTATOR)

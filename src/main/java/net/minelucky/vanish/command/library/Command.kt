@@ -11,7 +11,7 @@ import net.kyori.adventure.text.Component
 import net.minelucky.vanish.command.library.interfaces.ICommand
 import net.minelucky.vanish.command.library.interfaces.ISender
 import net.minelucky.vanish.ruom.Ruom
-import net.minelucky.vanish.utils.component
+import net.minelucky.vanish.utils.string.component
 import org.bukkit.command.CommandSender
 
 abstract class Command(

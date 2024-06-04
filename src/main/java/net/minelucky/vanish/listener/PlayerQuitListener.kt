@@ -17,11 +17,6 @@ class PlayerQuitListener(
 
     @EventHandler
     private fun onPlayerQuit(event: PlayerQuitEvent) {
-        val player = event.player
-
-        if (plugin.vanishedNames.contains(player.name))
-            event.quitMessage = null
-
-        Utils.actionbarPlayers.remove(player)
+        Utils.actionbarPlayers.remove(event.player)
     }
 }

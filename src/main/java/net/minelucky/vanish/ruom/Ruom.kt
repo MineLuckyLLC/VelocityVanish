@@ -1,7 +1,7 @@
 package net.minelucky.vanish.ruom
 
 import net.kyori.adventure.text.Component
-import net.minelucky.vanish.ruom.adventure.AdventureApi
+import net.minelucky.vanish.utils.adventure.AdventureApi
 import org.bukkit.Bukkit
 import org.bukkit.Server
 import org.bukkit.command.ConsoleCommandSender
