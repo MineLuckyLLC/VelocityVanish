@@ -8,4 +8,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "VelocityVanish"
+rootProject.name = "GoodbyeGonePoof"

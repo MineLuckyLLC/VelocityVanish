@@ -1,18 +1,10 @@
+main: net.minelucky.vanish.GoodbyeGonePoof
 name: '${name}'
 version: '${version}'
-main: ir.syrent.velocityvanish.spigot.VelocityVanishSpigot
-api-version: 1.13
-prefix: VelocityVanish
-authors: [ Syrent ]
+authors: [ "MineLucky Development Team" ]
 description: '${description}'
-website: syrent.ir
-folia-supported: true
 softdepend:
   - 'DiscordSRV'
   - 'ProtocolLib'
-  - 'ProCosmetics'
-  - 'SayanChat'
   - 'PlaceholderAPI'
-  - 'squaremap'
   - 'Essentials'
-  - 'CMI'

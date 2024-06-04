@@ -15,10 +15,10 @@ plugins {
 
 val versionString: String = findProperty("version")!! as String
 
-val slug = "velocityvanish"
-group = "ir.syrent.velocityvanish"
+val slug = "goodbyegonepoof"
+group = "net.minelucky.vanish"
 version = versionString
-description = "Modern vanish system with Velocity and Folia support"
+description = "Modern vanish system"
 
 repositories {
     mavenLocal()
@@ -54,7 +54,7 @@ repositories {
 
 dependencies {
     compileOnly("com.velocitypowered:velocity-api:3.1.1")
-    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:pandaspigot-server:1.8.8-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
     compileOnly("me.clip:placeholderapi:2.11.5")
     compileOnly("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
@@ -84,8 +84,8 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            groupId = "ir.syrent.velocityvanish"
-            artifactId = "VelocityVanish"
+            groupId = "net.minelucky.vanish"
+            artifactId = "GoodbyeGonePoof"
             version = "3.27.2-SNAPSHOT"
 
             from(components["java"])
@@ -119,7 +119,7 @@ publishing {
 
 tasks {
     runServer {
-        minecraftVersion("1.20.2")
+        minecraftVersion("1.8.8")
     }
 
     compileJava {
@@ -145,15 +145,15 @@ tasks {
         from("LICENSE")
         minimize()
 
-        relocate("io.papermc.lib", "ir.syrent.velocityvanish.dependencies.io.papermc.lib")
-        relocate("io.leangen", "ir.syrent.velocityvanish.dependencies.io.leangen")
-        relocate("com.google.gson", "ir.syrent.velocityvanish.dependencies.com.google.gson")
-        relocate("com.cryptomorin", "ir.syrent.velocityvanish.dependencies.com.github.cryptomorin")
-        relocate("cloud.commandframework", "ir.syrent.velocityvanish.dependencies.cloud.commandframework")
-        relocate("kotlin", "ir.syrent.velocityvanish.dependencies.kotlin")
-        relocate("com.jeff_media", "ir.syrent.velocityvanish.dependencies.com.jeff_media")
-        relocate("org.jetbrains", "ir.syrent.velocityvanish.dependencies.org.jetbrains")
-        relocate("org.intellij", "ir.syrent.velocityvanish.dependencies.org.intellij")
+        relocate("io.papermc.lib", "net.minelucky.vanish.dependencies.io.papermc.lib")
+        relocate("io.leangen", "net.minelucky.vanish.dependencies.io.leangen")
+        relocate("com.google.gson", "net.minelucky.vanish.dependencies.com.google.gson")
+        relocate("com.cryptomorin", "net.minelucky.vanish.dependencies.com.github.cryptomorin")
+        relocate("cloud.commandframework", "net.minelucky.vanish.dependencies.cloud.commandframework")
+        relocate("kotlin", "net.minelucky.vanish.dependencies.kotlin")
+        relocate("com.jeff_media", "net.minelucky.vanish.dependencies.com.jeff_media")
+        relocate("org.jetbrains", "net.minelucky.vanish.dependencies.org.jetbrains")
+        relocate("org.intellij", "net.minelucky.vanish.dependencies.org.intellij")
 
         doLast {
             println("Shadow JAR created at: ${archiveFile.get().asFile}")
@@ -202,7 +202,7 @@ sourceSets.main.get().java.srcDirs("src/generated/java", "src/main/java")
 
 /* All other things will be set inside the nmsGen method, */
 nmsGen {
-    basePackage = "ir.syrent.nms.accessors" // All generated classes will be in this package.
+    basePackage = "net.minelucky.nms.accessors" // All generated classes will be in this package.
     sourceSet = "src/generated/java" // All generated classes will be part of this source set.
     minMinecraftVersion = "1.8"
 
