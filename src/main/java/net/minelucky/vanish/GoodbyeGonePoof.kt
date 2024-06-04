@@ -19,6 +19,8 @@ import net.minelucky.vanish.ruom.Ruom
 import net.minelucky.vanish.utils.Utils
 import net.minelucky.vanish.utils.adventure.AdventureApi
 import net.minelucky.vanish.utils.string.component
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 import java.util.logging.Level
 
 
@@ -30,7 +32,9 @@ class GoodbyeGonePoof : RUoMPlugin() {
     lateinit var vanishManager: VanishManager
         private set
 
-    var protocolManager: ProtocolManager? = null;
+    var protocolManager: ProtocolManager? = null
+
+    var vanishedPlayersCache: ConcurrentMap<String, String> = ConcurrentHashMap()
 
     override fun onEnable() {
         instance = this
@@ -48,7 +52,7 @@ class GoodbyeGonePoof : RUoMPlugin() {
                 )
         }
 
-        protocolManager = ProtocolLibrary.getProtocolManager();
+        protocolManager = ProtocolLibrary.getProtocolManager()
         AdventureApi.initialize()
         vanishManager = VanishManager(this)
 
@@ -57,6 +61,10 @@ class GoodbyeGonePoof : RUoMPlugin() {
         VanishCommand(this)
 
         initializeListeners()
+
+        Ruom.runAsync({
+            updateVanishedPlayersCache()
+        }, 20L, 10L)
 
         protocolManager?.addPacketListener(
             object : PacketAdapter(
@@ -116,8 +124,13 @@ class GoodbyeGonePoof : RUoMPlugin() {
         redisClient?.close()
     }
 
+    private fun updateVanishedPlayersCache() {
+        val newCache: Map<String, String> = redisConnection?.sync()?.hgetall("vanished-players") ?: emptyMap()
+        vanishedPlayersCache = ConcurrentHashMap(newCache)
+    }
+
     fun getVanishedPlayers(): Map<String, String> {
-        return redisConnection?.sync()?.hgetall("vanished-players") ?: emptyMap()
+        return vanishedPlayersCache
     }
 
     private fun sendConsoleMessage(message: String) {

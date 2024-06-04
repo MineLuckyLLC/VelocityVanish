@@ -84,6 +84,7 @@ class VanishManager(
             if (onlinePlayerVanishLevel >= getVanishLevel(player) && getVanishLevel(player) != 0)
                 continue
 
+            println("Hiding player: " + player.name + " for online player: " + onlinePlayer.name)
             onlinePlayer.hidePlayer(player)
         }
     }
@@ -206,6 +207,10 @@ class VanishManager(
     }
 
     fun unVanish(player: Player, callPostEvent: Boolean = false) {
+        println("unvanish: " + player.name)
+        if (!plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
+            return
+
         val preUnVanishEvent = PreUnVanishEvent(player)
         GoodbyeGonePoof.instance.server.pluginManager.callEvent(preUnVanishEvent)
 
