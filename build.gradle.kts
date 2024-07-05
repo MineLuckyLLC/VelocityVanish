@@ -19,9 +19,27 @@ group = "net.minelucky"
 version = versionString
 description = "Modern Vanish"
 
+val mineluckyCredentials: () -> Map<String, String> = {
+    val username = System.getenv("MINELUCKY_REPO_USERNAME") ?: ""
+    val password = System.getenv("MINELUCKY_REPO_PASSWORD") ?: ""
+
+    if (username.isEmpty() || password.isEmpty())
+        println("MINELUCKY_REPO_USERNAME or MINELUCKY_REPO_PASSWORD environment variables are not set or empty.")
+
+    mapOf("username" to username, "password" to password)
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
+
+    maven {
+        url = uri("https://nexus.minelucky.net/repository/minelucky-snapshots/")
+        credentials {
+            username = mineluckyCredentials()["username"]
+            password = mineluckyCredentials()["password"]
+        }
+    }
 
     // Commons-IO
     maven("https://repo.maven.apache.org/maven2/")
@@ -40,11 +58,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:pandaspigot-server:1.8.8-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0")
     compileOnly("org.spongepowered:configurate-yaml:4.2.0-SNAPSHOT")
     compileOnly("io.lettuce:lettuce-core:6.3.2.RELEASE")
 
+    implementation("org.spigotmc:pandaspigot-api:1.8.8-R0.1-SNAPSHOT")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("commons-io:commons-io:2.16.1")
 
@@ -78,15 +96,8 @@ publishing {
                 name = "minelucky-releases"
                 url = uri("https://nexus.minelucky.net/repository/maven-releases/")
                 credentials {
-                    val username = System.getenv("MINELUCKY_REPO_USERNAME")
-                    val password = System.getenv("MINELUCKY_REPO_PASSWORD")
-
-                    if (username == null || password == null) {
-                        println("MINELUCKY_REPO_USERNAME or MINELUCKY_REPO_PASSWORD environment variables are not set.")
-                    }
-
-                    this.username = username
-                    this.password = password
+                    username = mineluckyCredentials()["username"]
+                    password = mineluckyCredentials()["password"]
                 }
             }
         }
