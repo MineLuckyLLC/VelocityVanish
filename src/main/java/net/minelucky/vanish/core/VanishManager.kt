@@ -207,7 +207,6 @@ class VanishManager(
     }
 
     fun unVanish(player: Player, callPostEvent: Boolean = false) {
-        println("unvanish: " + player.name)
         if (!plugin.getVanishedPlayers().containsKey(player.uniqueId.toString()))
             return
 
