@@ -84,7 +84,7 @@ class VanishManager(
             if (onlinePlayerVanishLevel >= getVanishLevel(player) && getVanishLevel(player) != 0)
                 continue
 
-            println("Hiding player: " + player.name + " for online player: " + onlinePlayer.name)
+//            println("Hiding player: " + player.name + " for online player: " + onlinePlayer.name)
             onlinePlayer.hidePlayer(player)
         }
     }
